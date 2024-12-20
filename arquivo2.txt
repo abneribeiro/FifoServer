@@ -1,0 +1,3 @@
+Este é o conteúdo de arquivo2.txt.
+O cliente deve receber este conteúdo quando solicitar.
+qewq
