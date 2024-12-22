@@ -41,7 +41,7 @@ int main() {
     printf("Servidor iniciado. Aguardando pedidos...\n");
 
     while (keep_running) {
-        fifo_srv = open(n_fifosrv, O_RDONLY | O_NONBLOCK);  // Abre o FIFO em modo não bloqueante
+        fifo_srv = open(n_fifosrv, O_RDONLY );  // Abre o FIFO em modo não bloqueante
         if (fifo_srv < 0) {
             if (!keep_running) {
                 break;  // Se o keep_running for 0, significa que o servidor deve parar
