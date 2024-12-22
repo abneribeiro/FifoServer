@@ -1,4 +1,3 @@
-// Servidor
 #include "srvfile.h"
 #include <signal.h>
 #include <sys/wait.h>
@@ -21,6 +20,10 @@ void sigint_handler(int sig) {
         printf("Enviando SIGTERM para o processo filho %d\n", child_pids[i]);
         kill(child_pids[i], SIGTERM);
     }
+
+    // Remover o FIFO do servidor
+    unlink(n_fifosrv);
+    printf("FIFO do servidor removido.\n");
 }
 
 int main() {
@@ -41,29 +44,28 @@ int main() {
     printf("Servidor iniciado. Aguardando pedidos...\n");
 
     while (keep_running) {
-        fifo_srv = open(n_fifosrv, O_RDONLY );  // Abre o FIFO em modo não bloqueante
+        fifo_srv = open(n_fifosrv, O_RDONLY);  // Modo não bloqueante
         if (fifo_srv < 0) {
             if (!keep_running) {
                 break;  // Se o keep_running for 0, significa que o servidor deve parar
             }
             perror("Erro ao abrir FIFO do servidor");
+            usleep(100000);  // Espera um pouco antes de tentar novamente
             continue;  // Se não conseguir abrir o FIFO, tenta novamente
         }
 
         bytes_read = read(fifo_srv, &request, sizeof(request));
-        close(fifo_srv);  // Fecha o FIFO imediatamente após a leitura
-
         if (bytes_read <= 0) {
-            if (bytes_read == 0) {
-                // FIFO foi fechado pelo outro lado, reabra-o
-                continue;
+            if (!keep_running) {
+                break;  // Verifica se SIGINT foi recebido
             }
-            perror("Erro ao ler pedido do cliente");
-            continue;
+            close(fifo_srv);  // Fecha o FIFO para reabrir no próximo loop
+            usleep(100000);   // Espera um pouco antes de tentar novamente
+            continue;  // Se não conseguir ler nada, tenta novamente
         }
 
+        // Processa a requisição normalmente (criação do processo filho)
         printf("Pedido recebido para o arquivo: %s\n", request.n_file);
-
         pid_t pid = fork();
         if (pid == 0) {  // Processo filho
             file = open(request.n_file, O_RDONLY);
@@ -91,25 +93,14 @@ int main() {
             close(file);
             close(fifo_cli);
             exit(0);
-        } else if (pid < 0) {
-            perror("Erro ao criar processo filho");
-        } else {
-            // Processo pai
+        } else if (pid > 0) {
             child_pids[child_count++] = pid;  // Armazena o PID do processo filho
+        } else {
+            perror("Erro ao criar processo filho");
         }
 
-        // Limpa processos filhos que já terminaram
-        for (int i = 0; i < child_count; i++) {
-            pid_t terminated_pid = waitpid(child_pids[i], NULL, WNOHANG);
-            if (terminated_pid > 0) {
-                // Remover o PID do array
-                for (int j = i; j < child_count - 1; j++) {
-                    child_pids[j] = child_pids[j + 1];
-                }
-                child_count--;
-                i--;  // Ajusta o índice para verificar o próximo PID
-            }
-        }
+        close(fifo_srv);  // Fecha o FIFO após processar o pedido
+        usleep(100000);  // Dá uma pausa para evitar o loop rodando excessivamente rápido
     }
 
     // Espera todos os processos filhos terminarem antes de encerrar o servidor
