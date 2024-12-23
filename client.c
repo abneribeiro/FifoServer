@@ -6,9 +6,9 @@
 #include <string.h>
 
 int main(int argc, char *argv[]) {
-    // Verifica se o número de argumentos é correto
+    // Check if the number of arguments is correct
     if (argc != 2) {
-        fprintf(stderr, "Uso: %s <nome_do_arquivo>\n", argv[0]);
+        fprintf(stderr, "Usage: %s <filename>\n", argv[0]);
         exit(1);
     }
 
@@ -18,57 +18,57 @@ int main(int argc, char *argv[]) {
     ssize_t bytes_read;
     char fifo_cli_name[50];
 
-    // Preenche a estrutura de pedido com o PID e o nome do arquivo
+    // Fill the request structure with the PID and the filename
     request.pid = getpid();
     strncpy(request.n_file, argv[1], MAX_FILE - 1);
-    request.n_file[MAX_FILE - 1] = '\0';  // Garante terminação nula
+    request.n_file[MAX_FILE - 1] = '\0';  // Ensure null termination
 
-    // Cria o nome do FIFO do cliente baseado no PID
+    // Create the client's FIFO name based on the PID
     snprintf(fifo_cli_name, sizeof(fifo_cli_name), "%d", request.pid);
-    unlink(fifo_cli_name);  // Remove o FIFO se já existir
+    unlink(fifo_cli_name);  // Remove the FIFO if it already exists
     if (mkfifo(fifo_cli_name, 0666) < 0) {
-        perror("Erro ao criar FIFO do cliente");
+        perror("Error creating client FIFO");
         exit(1);
     }
 
-    // Abre o FIFO do servidor para escrita
+    // Open the server's FIFO for writing
     fifo_srv = open(n_fifosrv, O_WRONLY);
     if (fifo_srv < 0) {
-        perror("Erro ao abrir FIFO do servidor");
+        perror("Error opening server FIFO");
         unlink(fifo_cli_name);
         exit(1);
     }
 
-    // Envia o pedido ao servidor
+    // Send the request to the server
     if (write(fifo_srv, &request, sizeof(request)) != sizeof(request)) {
-        perror("Erro ao enviar pedido ao servidor");
+        perror("Error sending request to server");
         unlink(fifo_cli_name);
         exit(1);
     }
 
-    // Abre o FIFO do cliente para leitura
+    // Open the client's FIFO for reading
     fifo_cli = open(fifo_cli_name, O_RDONLY);
     if (fifo_cli < 0) {
-        perror("Erro ao abrir FIFO do cliente");
+        perror("Error opening client FIFO");
         unlink(fifo_cli_name);
         exit(1);
     }
 
-    // Lê o conteúdo do arquivo enviado pelo servidor e escreve na saída padrão
-    printf("Conteúdo do arquivo '%s':\n", argv[1]);
+    // Read the file content sent by the server and write to standard output
+    printf("Content of file '%s':\n", argv[1]);
     while ((bytes_read = read(fifo_cli, buffer, MAX_BUFFER)) > 0) {
         if (write(STDOUT_FILENO, buffer, bytes_read) != bytes_read) {
-            perror("Erro ao escrever na saída padrão");
+            perror("Error writing to standard output");
             break;
         }
     }
 
-    // Verifica se houve erro na leitura do FIFO do cliente
+    // Check if there was an error reading from the client's FIFO
     if (bytes_read < 0) {
-        perror("Erro ao ler do FIFO do cliente");
+        perror("Error reading from client FIFO");
     }
 
-    // Fecha os FIFOs e remove o FIFO do cliente
+    // Close the FIFOs and remove the client's FIFO
     close(fifo_cli);
     close(fifo_srv);
     unlink(fifo_cli_name);
