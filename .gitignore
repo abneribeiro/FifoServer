@@ -1,0 +1,31 @@
+# Ignorar arquivos de objetos (.o)
+*.o
+
+# Ignorar o executável gerado
+main
+*.exe
+# Ignorar diretórios de build ou temporários
+/build/
+/bin/
+/obj/
+/out/
+
+# Ignorar arquivos de log
+*.log
+
+# Ignorar arquivos de configuração do editor e do sistema
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Ignorar arquivos de backup
+*.bak
+*.tmp
+
+# Ignorar arquivos gerados pelo Makefile
+*.d
+
+# Ignorar outros arquivos temporários
+*.gch

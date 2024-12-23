@@ -1,0 +1,4 @@
+FIFO communication is efficient for interprocess communication.
+This is the second example file for testing.
+Good luck with your project!
+End of example 2.
