@@ -1,5 +1,7 @@
 # Ignorar arquivos de objetos (.o)
 *.o
+client
+server
 
 # Ignorar o executável gerado
 main

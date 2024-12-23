@@ -4,6 +4,11 @@ The **FIFO Server** is a process communication project based on FIFOs (First In,
 
 This project demonstrates how FIFOs can be used to implement interprocess communication (IPC), making it ideal for applications requiring simple message exchanges or data transfer between processes in Unix/Linux systems.
 
+<div align="center">
+
+   https://github.com/user-attachments/assets/69f4e60d-eca4-4eea-9ab5-4574b427a679
+
+</div>
 ---
 
 ## **Features**
